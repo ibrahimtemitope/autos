@@ -448,7 +448,7 @@
                 <p class="login-subtitle">ALLIOSH Motors Management System</p>
             </div>
 
-            <form class="login-form" id="loginForm">
+            <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label class="form-label">Username</label>
                     <input type="text" class="form-input" id="username" required>
@@ -776,8 +776,124 @@
         </div>
     </div>
 
-    <script src="admin-data.js"></script>
-    <script src="admin.js"></script>
+    <script>
+        // =========== AUTH ===========
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if (user === 'admin' && pass === 'alliosh2024') {
+                localStorage.setItem('admin-session', 'authenticated');
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.add('active');
+                loadDashboardData();
+            } else {
+                alert('Invalid credentials. Use: admin / alliosh2024');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('admin-session');
+            location.reload();
+        }
+
+        // =========== NAVIGATION ===========
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(section).classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+        // =========== DATA ===========
+        function loadDashboardData() {
+            const orders = [
+                { id: 'ORD-001', customer: 'Chidi Okoro', vehicle: 'Mercedes-Benz S 580', amount: '₦185M', date: '2024-06-22', status: 'completed' },
+                { id: 'ORD-002', customer: 'Zainab Hassan', vehicle: 'Tesla Model S Plaid', amount: '₦178M', date: '2024-06-21', status: 'completed' },
+                { id: 'ORD-003', customer: 'Emeka Nwosu', vehicle: 'Toyota Land Cruiser VXR', amount: '₦165M', date: '2024-06-20', status: 'pending' },
+                { id: 'ORD-004', customer: 'Amara Smith', vehicle: 'Range Rover Autobiography', amount: '₦198M', date: '2024-06-19', status: 'completed' },
+                { id: 'ORD-005', customer: 'David Oluwale', vehicle: 'BMW M5 Competition', amount: '₦142M', date: '2024-06-18', status: 'completed' },
+            ];
+
+            document.getElementById('recentOrdersBody').innerHTML = orders.map(o => `
+                <tr>
+                    <td><strong>${o.id}</strong></td>
+                    <td>${o.customer}</td>
+                    <td>${o.vehicle}</td>
+                    <td><strong>${o.amount}</strong></td>
+                    <td>${o.date}</td>
+                    <td><span class="status-badge status-${o.status}">${o.status.toUpperCase()}</span></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('ordersBody').innerHTML = orders.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.customer}</td>
+                    <td>customer@example.com</td>
+                    <td>${o.vehicle}</td>
+                    <td>${o.amount}</td>
+                    <td>${o.date}</td>
+                    <td><span class="status-badge status-${o.status}">${o.status.toUpperCase()}</span></td>
+                    <td><button style="background: var(--accent-light); border: none; color: var(--accent); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">View</button></td>
+                </tr>
+            `).join('');
+
+            const vehicles = [
+                { brand: 'Mercedes-Benz', model: 'S 580', year: 2023, price: '₦185M', condition: 'Foreign Used', status: 'sold' },
+                { brand: 'Tesla', model: 'Model S Plaid', year: 2022, price: '₦178M', condition: 'Foreign Used', status: 'sold' },
+                { brand: 'Toyota', model: 'Land Cruiser VXR', year: 2023, price: '₦165M', condition: 'Brand New', status: 'sold' },
+                { brand: 'BMW', model: 'M5 Competition', year: 2022, price: '₦142M', condition: 'Foreign Used', status: 'sold' },
+                { brand: 'Range Rover', model: 'Autobiography', year: 2022, price: '₦198M', condition: 'Foreign Used', status: 'available' },
+                { brand: 'Lexus', model: 'LX 600', year: 2023, price: '₦172M', condition: 'Foreign Used', status: 'available' },
+            ];
+
+            document.getElementById('vehiclesBody').innerHTML = vehicles.map(v => `
+                <tr>
+                    <td>${v.brand}</td>
+                    <td>${v.model}</td>
+                    <td>${v.year}</td>
+                    <td>Sedan</td>
+                    <td><strong>${v.price}</strong></td>
+                    <td>${v.condition}</td>
+                    <td><span class="status-badge status-${v.status}">${v.status.toUpperCase()}</span></td>
+                </tr>
+            `).join('');
+
+            const customers = [
+                { name: 'Chidi Okoro', email: 'chidi@example.com', phone: '+234 803 456 7890', location: 'Lagos', purchases: 2, spent: '₦285M', joined: '2023-12-15' },
+                { name: 'Zainab Hassan', email: 'zainab@example.com', phone: '+234 805 123 4567', location: 'Abuja', purchases: 1, spent: '₦178M', joined: '2024-02-20' },
+                { name: 'Emeka Nwosu', email: 'emeka@example.com', phone: '+234 801 987 6543', location: 'Port Harcourt', purchases: 1, spent: '₦165M', joined: '2024-03-10' },
+            ];
+
+            document.getElementById('customersBody').innerHTML = customers.map(c => `
+                <tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td>${c.email}</td>
+                    <td>${c.phone}</td>
+                    <td>${c.location}</td>
+                    <td>${c.purchases}</td>
+                    <td><strong>${c.spent}</strong></td>
+                    <td>${c.joined}</td>
+                </tr>
+            `).join('');
+        }
+
+        // =========== INIT ===========
+        window.addEventListener('load', function() {
+            const session = localStorage.getItem('admin-session');
+            if (session === 'authenticated') {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.add('active');
+                loadDashboardData();
+            }
+        });
+    </script>
 
 </body>
 </html>
