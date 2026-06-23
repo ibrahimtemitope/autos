@@ -363,13 +363,20 @@ var chatOpened = false;
 var lastRecommended = [];
 
 function toggleChatbot() {
+    var wrap = document.getElementById('chatbotWrap');
     var panel = document.getElementById('chatbotPanel');
+    var isOpening = !panel.classList.contains('open');
+    
     panel.classList.toggle('open');
+    wrap.classList.toggle('active');
     document.getElementById('chatNotif').style.display = 'none';
     hideProactive();
-    if (panel.classList.contains('open') && !chatOpened) {
+    
+    if (isOpening && !chatOpened) {
         chatOpened = true;
-        document.getElementById('chatInput').focus();
+        setTimeout(function() {
+            document.getElementById('chatInput').focus();
+        }, 100);
         botSay('Welcome to Unique Alliosh. I\u2019m your personal automotive concierge. Tell me what you\u2019re looking for \u2014 a budget, a body style, a brand, or how you\u2019ll use it \u2014 and I\u2019ll match you with the perfect vehicle from our certified inventory.');
         showSuggestions(['SUVs under \u20a6100M', 'Show me luxury cars', 'Best for a family', 'What\u2019s on sale?']);
     }
@@ -700,6 +707,20 @@ document.addEventListener('keydown', function (e) {
 });
 document.getElementById('productModal').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeProductModal(); });
 document.getElementById('authModal').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeAuth(); });
+
+// Close chatbot when clicking outside
+document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('chatbotWrap');
+    var panel = document.getElementById('chatbotPanel');
+    var btn = document.getElementById('chatbotBtn');
+    
+    if (wrap && panel && wrap.classList.contains('active')) {
+        if (!wrap.contains(e.target) && e.target !== btn) {
+            panel.classList.remove('open');
+            wrap.classList.remove('active');
+        }
+    }
+});
 
 (function init() {
     var savedTheme = localStorage.getItem('ua-theme');
