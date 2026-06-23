@@ -224,8 +224,102 @@ function toggleCart() {
 }
 function handleCheckout() {
     if (cart.length === 0) { showToast('Your garage is empty'); return; }
-    showToast('Reservation confirmed — our team will call you shortly');
-    cart = []; saveCart(); updateCartBadge(); renderCart();
+    // Show sophisticated confirmation modal instead of just a toast
+    showReservationConfirmation();
+}
+
+// ---------- RESERVATION CONFIRMATION ----------
+function showReservationConfirmation() {
+    var total = cart.reduce(function(sum, item) { 
+        var p = products.find(function(x) { return x.id === item.id; });
+        return sum + (p ? p.price * item.qty : 0);
+    }, 0);
+    
+    var vehiclesList = cart.map(function(item) {
+        var p = products.find(function(x) { return x.id === item.id; });
+        return p ? '• ' + p.name + ' (x' + item.qty + ')' : '';
+    }).join('\n');
+    
+    // Create confirmation modal
+    var modal = document.createElement('div');
+    modal.id = 'reservationModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,15,0.8);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)';
+    
+    var content = document.createElement('div');
+    content.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;max-width:520px;width:90%;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,0.6);animation:slideUp 0.4s ease';
+    
+    content.innerHTML = `
+        <div style="font-size:3rem;margin-bottom:20px">✓</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;margin-bottom:12px;color:var(--text)">Reservation Confirmed!</h2>
+        <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.7;margin-bottom:24px">
+            Your reservation has been received. Our dedicated team will contact you within the next <strong>2 hours</strong> to confirm details, arrange payment, and schedule your test drive or delivery.
+        </p>
+        
+        <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;text-align:left">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--accent);text-transform:uppercase;margin-bottom:12px">Reserved Vehicles:</div>
+            ${cart.map(function(item) {
+                var p = products.find(function(x) { return x.id === item.id; });
+                if (!p) return '';
+                return `
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.9rem">
+                        <span>${p.name}</span>
+                        <span style="color:var(--accent);font-weight:600">${formatPrice(p.price)}</span>
+                    </div>
+                `;
+            }).join('')}
+            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;font-weight:600">
+                <span>Total Value:</span>
+                <span style="color:var(--accent)">${formatPrice(total)}</span>
+            </div>
+        </div>
+        
+        <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:16px;margin-bottom:24px">
+            <div style="color:var(--accent);font-size:0.85rem;font-weight:600;margin-bottom:8px">Contact Information</div>
+            <div style="font-size:0.9rem;color:var(--text);line-height:1.6">
+                <strong>WhatsApp:</strong> +234 803 456 7890<br>
+                <strong>Phone:</strong> +234 1 2700 700<br>
+                <strong>Email:</strong> sales@uniquealliosh.com
+            </div>
+        </div>
+        
+        <div style="display:flex;gap:12px">
+            <button onclick="document.getElementById('reservationModal').remove();toggleCart();showToast('Reservation saved to your account')" style="flex:1;padding:14px;background:var(--surface-hover);border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:600;cursor:pointer;transition:var(--transition)">Continue Shopping</button>
+            <button onclick="document.getElementById('reservationModal').remove();toggleCart();window.location.href='#'" style="flex:1;padding:14px;background:var(--accent);border:none;border-radius:10px;color:var(--bg);font-weight:600;cursor:pointer;transition:var(--transition)">View Reservation</button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Add animation
+    var style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+    
+    // Save reservation
+    var reservation = {
+        id: 'RES-' + Date.now(),
+        date: new Date().toLocaleString(),
+        vehicles: cart.slice(),
+        total: total
+    };
+    localStorage.setItem('ua-reservation', JSON.stringify(reservation));
+    
+    // Clear cart after confirmation
+    cart = []; 
+    saveCart(); 
+    updateCartBadge(); 
+    renderCart();
 }
 
 // ---------- WISHLIST ----------
@@ -428,6 +522,74 @@ function generateReply(raw) {
         var ev = products.filter(function (p) { return p.specs['Fuel'] === 'Electric'; });
         lastRecommended = ev;
         return { text: ev.length ? 'Going electric? Here\u2019s our standout EV \u2014 blistering performance with zero emissions:' : 'We don\u2019t have an EV in stock right now, but new arrivals come weekly.', cards: ev, suggestions: ['Luxury cars', 'Sports cars', 'Reserve it'] };
+    }
+
+    // intent: performance / sports
+    if (/\b(performance|fast|speed|powerful|horsepower|hp|acceleration|sports)\b/.test(t)) {
+        var sports = products.filter(function (p) { return p.category === 'sports'; }).sort(function (a, b) { return b.rating - a.rating; }).slice(0, 3);
+        lastRecommended = sports;
+        return { text: sports.length ? 'For pure adrenaline \u2014 these are our performance kings. Raw power, precision engineering, and unforgettable thrills:' : 'Our sports collection is carefully curated. Let me show you what we have.', cards: sports, suggestions: ['Financing for sports cars', 'Most expensive', 'Book a test drive'] };
+    }
+
+    // intent: reliability / dependability
+    if (/\b(reliable|dependable|trust|long ?lasting|years|durable|strong engine)\b/.test(t)) {
+        var reliable = products.filter(function (p) { return p.rating >= 4.8; }).sort(function (a, b) { return b.rating - a.rating; }).slice(0, 4);
+        lastRecommended = reliable;
+        return { text: 'Looking for a workhorse you can count on? These vehicles have our highest reliability scores \u2014 built to serve you for years:', cards: reliable, suggestions: ['Show SUVs', 'Show sedans', 'Warranty details'] };
+    }
+
+    // intent: used vs new
+    if (/\b(used|pre.?owned|second ?hand|certified pre.?owned|new|brand new|factory|unused)\b/.test(t)) {
+        if (/\b(new|brand new|factory|unused)\b/.test(t)) {
+            var brandnew = products.filter(function (p) { return p.specs['Mileage'] === '0 km'; }).slice(0, 4);
+            lastRecommended = brandnew;
+            return { text: brandnew.length ? 'Fresh from the factory \u2014 brand new, untouched, with full warranty:' : 'Our brand new collection arrives weekly. What body style interests you?', cards: brandnew, suggestions: ['Financing options', 'Delivery info', 'Reserve one'] };
+        } else {
+            var used = products.filter(function (p) { return p.specs['Mileage'] !== '0 km'; }).sort(function (a, b) { return b.rating - a.rating; }).slice(0, 4);
+            lastRecommended = used;
+            return { text: 'Pre-owned vehicles that have been thoroughly inspected and maintained. Each comes with a full condition report and 6-month warranty:', cards: used, suggestions: ['Financing', 'Warranty details', 'Reserve it'] };
+        }
+    }
+
+    // intent: comparison / which one
+    if (/\b(which|compare|versus|vs|better|difference|against)\b/.test(t)) {
+        if (lastRecommended.length >= 2) return { text: 'Great question. All of these are excellent \u2014 it depends on your priorities. Need something spacious for family? Prefer efficiency? Speed? Tell me and I\u2019ll narrow it down.', suggestions: ['Show luxury', 'Show SUVs', 'Most affordable'] };
+        return { text: 'I\u2019d love to compare options for you. First, let me shortlist a few vehicles based on what matters to you \u2014 budget, body style, or brand?', suggestions: ['SUVs', 'Sedans', 'Luxury'] };
+    }
+
+    // intent: color / appearance
+    if (/\b(color|colour|black|white|silver|blue|red|gray|grey|appearance|looks)\b/.test(t)) {
+        return { text: 'We stock vehicles in all the classic colors. When you reserve a vehicle or book a test drive, you can confirm the exact color and finish. Would you like to see our current inventory?', suggestions: ['Show me vehicles', 'Book a viewing', 'Most popular'] };
+    }
+
+    // intent: mileage / condition details
+    if (/\b(mileage|kilometers?|miles|condition|wear|scratches|dents|accident|history)\b/.test(t)) {
+        return { text: 'Every vehicle listing shows exact mileage and condition. Brand new cars are 0 km. Certified pre-owned vehicles come with a full inspection report showing all service history and any cosmetic notes. You can request a detailed inspection on any vehicle before purchase.', suggestions: ['Show brand new', 'Show certified pre-owned', 'Book an inspection'] };
+    }
+
+    // intent: trade-in / exchange
+    if (/\b(trade.?in|exchange|trade|your car|my car|old car|selling)\b/.test(t)) {
+        return { text: 'Absolutely \u2014 we accept trade-ins on any vehicle you\u2019re replacing. Our team will assess your current car and provide a fair valuation that can be applied as credit toward your purchase. Share your vehicle details and I\u2019ll arrange an inspection.', suggestions: ['Tell me about my car', 'Show me vehicles', 'Book a trade-in appraisal'] };
+    }
+
+    // intent: insurance / protection
+    if (/\b(insurance|cover|protected|damage|accident|comprehensible|theft)\b/.test(t)) {
+        return { text: 'We work with leading insurers nationwide. Most vehicles can be insured on the same day of purchase. Our team can connect you with preferred insurance partners who offer competitive rates for our customers. Delivery is always fully insured at no extra cost.', suggestions: ['Delivery info', 'Show insurance partners', 'Book a vehicle'] };
+    }
+
+    // intent: customization / modification
+    if (/\b(customize|modify|upgrade|install|accessories|rims|lights|interior)\b/.test(t)) {
+        return { text: 'Some vehicles come pre-configured with premium packages. For specific customization requests, our aftersales team can recommend trusted partners for quality upgrades and installations. Let\u2019s find your base vehicle first.', suggestions: ['Show luxury options', 'Show premium sedans', 'Talk to a sales agent'] };
+    }
+
+    // intent: payment methods / terms
+    if (/\b(payment|pay|cash|credit|debit|bank transfer|cheque|terms)\b/.test(t)) {
+        return { text: 'We accept cash, bank transfer, and credit arrangements. For customers without immediate cash, our financing partners offer 12\u201348 month terms with a 30% down payment. Early repayment is always welcome with no penalties. Which option suits you best?', suggestions: ['Full payment', 'Financing options', 'Lease terms'] };
+    }
+
+    // intent: showroom / visit
+    if (/\b(showroom|office|location|where are you|directions|visit us|address)\b/.test(t)) {
+        return { text: 'Our main showroom is in Lagos with viewing centers in Abuja and Port Harcourt. You can visit anytime, schedule a private viewing, or we can arrange doorstep showings. Which city are you in?', suggestions: ['Lagos', 'Abuja', 'Port Harcourt', 'Schedule a visit'] };
     }
 
     // entity-driven recommendation (type / brand / budget combinations)
