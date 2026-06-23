@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reservations — Unique Alliosh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f; --bg-elevated: #111118; --surface: #1a1a24; --surface-hover: #22222e;
+            --text: #f0f0f5; --text-muted: #8a8a9a; --text-dim: #5a5a6a; --accent: #c9a96e;
+            --accent-soft: rgba(201,169,110,0.15); --accent-glow: rgba(201,169,110,0.08);
+            --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
+            --shadow: 0 25px 80px rgba(0,0,0,0.6); --transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        .page-header { margin-bottom: 40px; }
+        .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 600; margin-bottom: 8px; }
+        .page-header p { color: var(--text-muted); font-size: 0.95rem; }
+        
+        .reservations-grid { display: grid; gap: 24px; }
+        .reservation-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+        .res-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .res-id { font-size: 0.85rem; color: var(--accent); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .res-status { padding: 6px 14px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-pending { background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.3); }
+        .status-confirmed { background: rgba(39,174,96,0.15); color: #27ae60; border: 1px solid rgba(39,174,96,0.3); }
+        
+        .res-vehicle { margin: 16px 0; padding: 14px; background: var(--surface); border-radius: 12px; display: flex; gap: 16px; align-items: center; }
+        .res-vehicle-info { flex: 1; }
+        .res-vehicle-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+        .res-vehicle-price { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: var(--accent); }
+        
+        .res-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .res-date { font-size: 0.8rem; color: var(--text-dim); }
+        .res-total { display: flex; flex-direction: column; align-items: flex-end; }
+        .res-total-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+        .res-total-amount { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 600; color: var(--accent); }
+        
+        .empty-state { text-align: center; padding: 60px 24px; }
+        .empty-state svg { width: 80px; height: 80px; opacity: 0.2; margin-bottom: 24px; }
+        .empty-state h2 { font-size: 1.3rem; margin-bottom: 12px; font-family: 'Playfair Display', serif; }
+        .empty-state p { color: var(--text-muted); margin-bottom: 24px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); text-decoration: none; font-weight: 600; transition: var(--transition); }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        
+        .nav-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .nav-top a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-top">
+            <a href="index.html" style="display:flex;align-items:center;gap:8px">← Back to Store</a>
+            <span style="font-size:0.85rem;color:var(--text-dim)">My Reservations</span>
+        </div>
+
+        <div class="page-header">
+            <h1>My Reservations</h1>
+            <p>Track your vehicle reservations and manage your orders</p>
+        </div>
+
+        <div id="reservationsContainer" class="reservations-grid"></div>
+
+        <div id="emptyState" class="empty-state" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M6 6L5 3H2"/>
+            </svg>
+            <h2>No reservations yet</h2>
+            <p>Start browsing our premium vehicle collection</p>
+            <a href="index.html" class="back-btn">Continue Shopping</a>
+        </div>
+    </div>
+
+    <script>
+        function formatPrice(n) { return '₦' + n.toLocaleString('en-NG'); }
+        
+        function loadReservations() {
+            var res = JSON.parse(localStorage.getItem('ua-reservation'));
+            var container = document.getElementById('reservationsContainer');
+            var emptyState = document.getElementById('emptyState');
+            
+            if (!res || !res.vehicles || res.vehicles.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="reservation-card">
+                    <div class="res-header">
+                        <div class="res-id">${res.id}</div>
+                        <span class="res-status status-pending">Awaiting Confirmation</span>
+                    </div>
+                    
+                    ${res.vehicles.map(function(item) {
+                        return `
+                            <div class="res-vehicle">
+                                <div class="res-vehicle-info">
+                                    <div class="res-vehicle-name">${item.name || 'Vehicle'}</div>
+                                    <div class="res-vehicle-price">${formatPrice(item.price || 0)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                    
+                    <div class="res-footer">
+                        <div class="res-date">Reserved: ${new Date(res.date).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        <div class="res-total">
+                            <div class="res-total-label">Total Value</div>
+                            <div class="res-total-amount">${formatPrice(res.total || 0)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background:var(--accent-glow);border:1px solid var(--accent-soft);border-radius:14px;padding:24px;margin-top:24px">
+                    <div style="color:var(--accent);font-weight:700;font-size:0.85rem;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">What happens next?</div>
+                    <div style="color:var(--text-muted);font-size:0.9rem;line-height:1.7">
+                        <p style="margin-bottom:12px">Our team will contact you within 2 hours to:</p>
+                        <ul style="margin-left:20px;line-height:1.8">
+                            <li>Confirm your vehicle preferences</li>
+                            <li>Discuss payment options and financing</li>
+                            <li>Schedule a test drive or home viewing</li>
+                            <li>Arrange delivery if needed</li>
+                        </ul>
+                        <p style="margin-top:12px"><strong>Contact:</strong> WhatsApp +234 803 456 7890 | Phone +234 1 2700 700</p>
+                    </div>
+                </div>
+            `;
+            emptyState.style.display = 'none';
+        }
+        
+        loadReservations();
+    </script>
+</body>
+</html>

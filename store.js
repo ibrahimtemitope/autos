@@ -243,60 +243,62 @@ function showReservationConfirmation() {
     // Create confirmation modal
     var modal = document.createElement('div');
     modal.id = 'reservationModal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,15,0.8);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,15,0.7);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);padding:20px;animation:fadeIn 0.3s ease';
     
     var content = document.createElement('div');
-    content.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;max-width:520px;width:90%;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,0.6);animation:slideUp 0.4s ease';
+    content.style.cssText = 'background:var(--bg-elevated);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;text-align:center;box-shadow:0 25px 100px rgba(0,0,0,0.4);animation:slideUp 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
     
     content.innerHTML = `
-        <div style="font-size:3rem;margin-bottom:20px">✓</div>
-        <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;margin-bottom:12px;color:var(--text)">Reservation Confirmed!</h2>
-        <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.7;margin-bottom:24px">
-            Your reservation has been received. Our dedicated team will contact you within the next <strong>2 hours</strong> to confirm details, arrange payment, and schedule your test drive or delivery.
+        <div style="font-size:3.5rem;margin-bottom:16px">✓</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:600;margin-bottom:16px;color:var(--text)">Reservation Confirmed</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.8;margin-bottom:28px">
+            Your reservation has been received. Our dedicated team will contact you within the next <strong style="color:var(--accent)">2 hours</strong> to confirm details, arrange payment, and schedule your test drive or delivery.
         </p>
         
-        <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;text-align:left">
-            <div style="font-size:0.85rem;font-weight:600;color:var(--accent);text-transform:uppercase;margin-bottom:12px">Reserved Vehicles:</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;text-align:left">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Reserved Vehicles</div>
             ${cart.map(function(item) {
                 var p = products.find(function(x) { return x.id === item.id; });
                 if (!p) return '';
                 return `
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.9rem">
-                        <span>${p.name}</span>
-                        <span style="color:var(--accent);font-weight:600">${formatPrice(p.price)}</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:0.9rem">
+                        <span style="color:var(--text)">${p.name}</span>
+                        <span style="color:var(--accent);font-weight:600;font-family:'Playfair Display',serif">${formatPrice(p.price)}</span>
                     </div>
                 `;
             }).join('')}
-            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;font-weight:600">
-                <span>Total Value:</span>
-                <span style="color:var(--accent)">${formatPrice(total)}</span>
+            <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:0;display:flex;justify-content:space-between;font-weight:600;color:var(--text);font-size:1rem">
+                <span>Total Value</span>
+                <span style="color:var(--accent);font-family:'Playfair Display',serif;font-size:1.2rem">${formatPrice(total)}</span>
             </div>
         </div>
         
-        <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:16px;margin-bottom:24px">
-            <div style="color:var(--accent);font-size:0.85rem;font-weight:600;margin-bottom:8px">Contact Information</div>
-            <div style="font-size:0.9rem;color:var(--text);line-height:1.6">
-                <strong>WhatsApp:</strong> +234 803 456 7890<br>
-                <strong>Phone:</strong> +234 1 2700 700<br>
-                <strong>Email:</strong> sales@uniquealliosh.com
+        <div style="background:var(--accent-glow);border:1px solid var(--accent-soft);border-radius:14px;padding:20px;margin-bottom:28px">
+            <div style="color:var(--accent);font-size:0.8rem;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Next Steps</div>
+            <div style="font-size:0.9rem;color:var(--text-muted);line-height:1.7">
+                Our team will contact you via <strong>WhatsApp</strong> (+234 803 456 7890) or <strong>Phone</strong> (+234 1 2700 700) to finalize your reservation.
             </div>
         </div>
         
-        <div style="display:flex;gap:12px">
-            <button onclick="document.getElementById('reservationModal').remove();toggleCart();showToast('Reservation saved to your account')" style="flex:1;padding:14px;background:var(--surface-hover);border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:600;cursor:pointer;transition:var(--transition)">Continue Shopping</button>
-            <button onclick="document.getElementById('reservationModal').remove();toggleCart();window.location.href='#'" style="flex:1;padding:14px;background:var(--accent);border:none;border-radius:10px;color:var(--bg);font-weight:600;cursor:pointer;transition:var(--transition)">View Reservation</button>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button onclick="document.getElementById('reservationModal').remove();toggleCart();showToast('Reservation saved')" style="flex:1;min-width:140px;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-weight:600;cursor:pointer;transition:var(--transition);font-size:0.9rem">Continue Shopping</button>
+            <button onclick="document.getElementById('reservationModal').remove();toggleCart();window.location.href='reservations.html'" style="flex:1;min-width:140px;padding:13px 16px;background:var(--accent);border:none;border-radius:12px;color:var(--bg);font-weight:600;cursor:pointer;transition:var(--transition);font-size:0.9rem">View Reservations</button>
         </div>
     `;
     
     modal.appendChild(content);
     document.body.appendChild(modal);
     
-    // Add animation
+    // Add animations
     var style = document.createElement('style');
     style.textContent = `
         @keyframes slideUp {
-            from { transform: translateY(40px); opacity: 0; }
+            from { transform: translateY(30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     `;
     document.head.appendChild(style);
@@ -363,12 +365,10 @@ var chatOpened = false;
 var lastRecommended = [];
 
 function toggleChatbot() {
-    var wrap = document.getElementById('chatbotWrap');
     var panel = document.getElementById('chatbotPanel');
     var isOpening = !panel.classList.contains('open');
     
     panel.classList.toggle('open');
-    wrap.classList.toggle('active');
     document.getElementById('chatNotif').style.display = 'none';
     hideProactive();
     
@@ -714,10 +714,9 @@ document.addEventListener('click', function(e) {
     var panel = document.getElementById('chatbotPanel');
     var btn = document.getElementById('chatbotBtn');
     
-    if (wrap && panel && wrap.classList.contains('active')) {
+    if (wrap && panel && panel.classList.contains('open')) {
         if (!wrap.contains(e.target) && e.target !== btn) {
             panel.classList.remove('open');
-            wrap.classList.remove('active');
         }
     }
 });
